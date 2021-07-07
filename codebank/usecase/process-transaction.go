@@ -3,6 +3,7 @@ package usecase
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"runtime/debug"
 	"time"
 
@@ -17,11 +18,6 @@ type UseCaseTransaction struct {
 }
 
 func NewUseCaseTransaction(transactionRepository domain.TransactionRepository) *UseCaseTransaction {
-	// transaction = UseCaseTransaction{
-	// 	TransactionRepository: transactionRepository,
-	// 	KafkaProducer: kafka.NewKafkaProducer(),
-	// }
-
 	return &UseCaseTransaction{TransactionRepository: transactionRepository}
 }
 
@@ -90,7 +86,7 @@ func (useCase *UseCaseTransaction) ProcessTransaction(transactionDto dto.Transac
 		return nil, err
 	}
 
-	err = useCase.KafkaProducer.Publish(string(transactionJson), "payments")
+	err = useCase.KafkaProducer.Publish(string(transactionJson), os.Getenv("KAFKA_TRANSACTION_TOPIC"))
 
 	if err != nil {
 		fmt.Println(err)

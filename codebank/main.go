@@ -4,22 +4,24 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/LucasRMP/codebank/infrastructure/grpc/server"
 	"github.com/LucasRMP/codebank/infrastructure/kafka"
 	"github.com/LucasRMP/codebank/infrastructure/repository"
 	"github.com/LucasRMP/codebank/usecase"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func SetupDb() *sql.DB {
 	psqlConfig := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		"db",
-		"5432",
-		"postgres",
-		"root",
-		"codebank",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
 	)
 
 	db, err := sql.Open("postgres", psqlConfig)
@@ -40,7 +42,7 @@ func SetupTransactionUseCase(db *sql.DB, producer *kafka.KafkaProducer) *usecase
 
 func SetupKafkaProducer() kafka.KafkaProducer {
 	producer := kafka.NewKafkaProducer()
-	producer.SetupProducer("host.docker.internal:9094")
+	producer.SetupProducer(os.Getenv("KAFKA_BOOTSTRAP_SERVERS"))
 	return producer
 }
 
@@ -49,6 +51,13 @@ func ServeGRPC(processTransactionUseCase *usecase.UseCaseTransaction) {
 	grpcServer.ProcessTransactionUseCase = *processTransactionUseCase
 	fmt.Println("gRPC server listening on port 50051")
 	grpcServer.Serve()
+}
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("failed loading the enviroment")
+	}
 }
 
 func main() {
