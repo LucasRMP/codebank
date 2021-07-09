@@ -9,9 +9,9 @@ export const products: Product[] = Array.from({ length: 30 }, (_, idx) => {
     id: `${idx + 1}`,
     name,
     description: faker.commerce.productDescription(),
-    image_url: 'https://source.unsplash.com/random?product' + Math.random(),
+    imageUrl: 'https://source.unsplash.com/random?product' + Math.random(),
     slug: faker.helpers.slugify(name.toLowerCase()),
     price: faker.datatype.number({ precision: 2 }),
-    created_at: faker.date.past(10).toISOString(),
+    createdAt: faker.date.past(10).toISOString(),
   }
 })

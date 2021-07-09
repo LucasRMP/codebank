@@ -34,7 +34,7 @@ const ProductOrderPage: NextPage<PageProps> = ({ product }) => {
 
       <ListItem>
         <ListItemAvatar>
-          <Avatar src={product.image_url} />
+          <Avatar src={product.imageUrl} />
         </ListItemAvatar>
         <ListItemText primary={product.name} secondary={`$ ${product.price}`} />
       </ListItem>

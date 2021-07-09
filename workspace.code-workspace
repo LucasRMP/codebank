@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "store-frontend"
+		},
+		{
+			"path": "store-api"
+		},
+		{
+			"path": "apache-kafka"
+		},
+		{
+			"path": "codebank"
+		}
+	],
+	"settings": {}
+}

@@ -39,7 +39,7 @@ const ProductListPage: NextPage<PageProps> = ({ products }) => {
               <Card>
                 <CardMedia
                   style={{ paddingTop: '56%' }}
-                  image={product.image_url}
+                  image={product.imageUrl}
                 />
                 <CardContent>
                   <Typography
