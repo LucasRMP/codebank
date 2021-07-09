@@ -10,9 +10,10 @@ import {
 import axios from 'axios'
 import { GetStaticPaths, GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
+import Link from 'next/link'
 
-import { Product } from '../../models/product'
-import api from '../../services/api'
+import { Product } from '../../../models/product'
+import api from '../../../services/api'
 
 interface PageProps {
   product: Product
@@ -32,9 +33,15 @@ const ProductPage: NextPage<PageProps> = ({ product }) => {
         />
 
         <CardActions>
-          <Button size="small" color="primary" component="a">
-            Buy
-          </Button>
+          <Link
+            href="/products/[slug]/order"
+            as={`/products/${product.slug}/order`}
+            passHref
+          >
+            <Button size="small" color="primary" component="a">
+              Buy
+            </Button>
+          </Link>
         </CardActions>
 
         <CardMedia style={{ paddingTop: '56%' }} image={product.image_url} />
@@ -60,7 +67,7 @@ export const getStaticProps: GetStaticProps<PageProps, { slug: string }> =
         props: {
           product,
         },
-        revalidate: 1 * 60 * 2,
+        revalidate: 60 * 2, // 2 minutes
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 404) {
@@ -72,9 +79,11 @@ export const getStaticProps: GetStaticProps<PageProps, { slug: string }> =
   }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const { data: products } = await api.get<Product[]>('/products')
-
-  const paths = products.map((product) => ({ params: { slug: product.slug } }))
+  const paths = [
+    { slug: 'practical-concrete-chair' },
+    { slug: 'practical-granite-table' },
+    { slug: 'intelligent-metal-soap' },
+  ].map((product) => ({ params: { slug: product.slug } }))
 
   return {
     paths,
