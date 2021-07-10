@@ -16,6 +16,8 @@ import Head from 'next/head'
 import type { ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import type { SubmitHandler } from 'react-hook-form'
+import { useRouter } from 'next/router'
+import { useSnackbar } from 'notistack'
 
 import { Product } from '../../../models/product'
 import api from '../../../services/api'
@@ -27,19 +29,22 @@ interface PageProps {
 
 const ProductOrderPage: NextPage<PageProps> = ({ product }) => {
   const { register, handleSubmit, setValue } = useForm<CreditCard>()
+  const router = useRouter()
+  const { enqueueSnackbar } = useSnackbar()
 
-  const handleFormSubmit: SubmitHandler<CreditCard> = async (values) => {
-    const { data } = await api.post('/orders', {
-      creditCard: values,
-      items: [
-        {
-          productId: product.id,
-          quantity: 1,
-        },
-      ],
-    })
-
-    console.log({ data })
+  const handleFormSubmit: SubmitHandler<CreditCard> = async (formData) => {
+    try {
+      const { data: order } = await api.post('/orders', {
+        creditCard: formData,
+        items: [{ productId: product.id, quantity: 1 }],
+      })
+      router.push(`/orders/${order.id}`)
+    } catch (e) {
+      console.error(axios.isAxiosError(e) ? e.response?.data : e)
+      enqueueSnackbar('Erro ao realizar sua compra.', {
+        variant: 'error',
+      })
+    }
   }
 
   const setAsInteger =

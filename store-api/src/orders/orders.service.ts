@@ -72,11 +72,9 @@ export class OrdersService {
   }
 
   async findOne(id: string) {
-    const product = await this.orderRepo.findOne(id);
-    if (!product) {
-      throw new EntityNotFoundError(Order, id);
-    }
-    return product;
+    return this.orderRepo.findOneOrFail(id, {
+      relations: ['items', 'items.product'],
+    });
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto) {

@@ -5,6 +5,7 @@ import { orange } from '@material-ui/core/colors'
 import { Box, Container } from '@material-ui/core'
 import type { AppProps } from 'next/app'
 import { useEffect } from 'react'
+import { SnackbarProvider } from 'notistack'
 
 import Navbar from '../components/navbar'
 
@@ -26,16 +27,18 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <ThemeProvider theme={darkTheme}>
-      <Head>
-        <title>App Store</title>
-      </Head>
-      <Navbar />
-      <Container>
-        <Box marginY={2}>
-          <CssBaseline />
-          <Component {...pageProps} />
-        </Box>
-      </Container>
+      <SnackbarProvider>
+        <Head>
+          <title>App Store</title>
+        </Head>
+        <Navbar />
+        <Container>
+          <Box marginY={2}>
+            <CssBaseline />
+            <Component {...pageProps} />
+          </Box>
+        </Container>
+      </SnackbarProvider>
     </ThemeProvider>
   )
 }
