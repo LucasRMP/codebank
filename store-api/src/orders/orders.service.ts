@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Order } from 'src/orders/entities/order.entity';
+import { Order, OrderStatus } from 'src/orders/entities/order.entity';
+import { PaymentService } from 'src/orders/payment/payment.service';
 import { Product } from 'src/products/entities/product.entity';
-import { EntityNotFoundError, In, Repository } from 'typeorm';
+import { Connection, EntityNotFoundError, In, Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 
@@ -11,27 +12,63 @@ export class OrdersService {
   constructor(
     @InjectRepository(Order) private orderRepo: Repository<Order>,
     @InjectRepository(Product) private productRepo: Repository<Product>,
+    private paymentService: PaymentService,
+    private connection: Connection,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
-    const order = this.orderRepo.create(createOrderDto);
+    const orderPartial = this.orderRepo.create(createOrderDto);
+
+    const queryRunner = this.connection.createQueryRunner();
 
     const products = await this.productRepo.find({
       where: {
-        id: In(order.items.map((item) => item.productId)),
+        id: In(orderPartial.items.map((item) => item.productId)),
       },
     });
 
-    order.items.forEach((item) => {
+    orderPartial.items.forEach((item) => {
       const product = products.find((product) => product.id === item.productId);
       item.price = product.price;
     });
 
-    return this.orderRepo.save(order);
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const order = await queryRunner.manager.save(orderPartial);
+
+      await this.paymentService.payment({
+        amount: order.total,
+        creditCard: order.creditCard,
+        description: `Products: ${products
+          .map((product) => product.name)
+          .join(',')}`,
+        store: process.env.STORE_NAME,
+      });
+
+      await queryRunner.manager.update(
+        Order,
+        { id: order.id },
+        {
+          status: OrderStatus.APPROVED,
+        },
+      );
+
+      await queryRunner.commitTransaction();
+      return this.orderRepo.findOne(order.id, { relations: ['items'] });
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
-  findAll() {
-    return this.orderRepo.find();
+  async findAll() {
+    const [orders, totalCount] = await this.orderRepo.findAndCount();
+
+    return { pageInfo: { totalCount }, orders };
   }
 
   async findOne(id: string) {

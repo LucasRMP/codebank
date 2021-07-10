@@ -21,7 +21,7 @@ interface PageProps {
 
 const ProductPage: NextPage<PageProps> = ({ product }) => {
   return (
-    <div>
+    <>
       <Head>
         <title>{product.name} - App Store</title>
       </Head>
@@ -51,7 +51,7 @@ const ProductPage: NextPage<PageProps> = ({ product }) => {
           </Typography>
         </CardContent>
       </Card>
-    </div>
+    </>
   )
 }
 
@@ -59,9 +59,7 @@ export const getStaticProps: GetStaticProps<PageProps, { slug: string }> =
   async ({ params }) => {
     try {
       const { slug } = params
-      const {
-        data: { product },
-      } = await api.get<{ product: Product }>(`/products/${slug}`)
+      const { data: product } = await api.get<Product>(`/products/${slug}`)
 
       return {
         props: {
@@ -79,14 +77,12 @@ export const getStaticProps: GetStaticProps<PageProps, { slug: string }> =
   }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const paths = [
-    { slug: 'practical-concrete-chair' },
-    { slug: 'practical-granite-table' },
-    { slug: 'intelligent-metal-soap' },
-  ].map((product) => ({ params: { slug: product.slug } }))
+  const { data } = await api.get<Product[]>('/products')
 
   return {
-    paths,
+    paths: data.map((product) => ({
+      params: { slug: product.slug ?? product.id },
+    })),
     fallback: 'blocking',
   }
 }

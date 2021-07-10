@@ -12,7 +12,7 @@ import {
   Container,
 } from '@material-ui/core'
 
-import Iterate from '../components/Iterate'
+import Iterate from '../components/iterate'
 import { Product } from '../models/product'
 import api from '../services/api'
 
@@ -22,7 +22,7 @@ interface PageProps {
 
 const ProductListPage: NextPage<PageProps> = ({ products }) => {
   return (
-    <Container>
+    <>
       <Head>
         <title>List - App Store</title>
       </Head>
@@ -72,7 +72,7 @@ const ProductListPage: NextPage<PageProps> = ({ products }) => {
           )}
         />
       </Grid>
-    </Container>
+    </>
   )
 }
 

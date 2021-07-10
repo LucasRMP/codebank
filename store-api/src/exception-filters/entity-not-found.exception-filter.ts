@@ -8,7 +8,7 @@ export class EntityNotFoundExceptionFilter extends BaseExceptionFilter {
   catch(exception: EntityNotFoundError, host: ArgumentsHost) {
     const { getResponse } = host.switchToHttp();
     const response = getResponse<Response>();
-    response.status(404).json({
+    return response.status(404).json({
       error: 'Not found.',
       message: exception.message,
       ...(process.env.NODE_ENV === 'development' && { stack: exception.stack }),

@@ -13,17 +13,42 @@ import {
 import axios from 'axios'
 import { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
+import type { ChangeEvent } from 'react'
+import { useForm } from 'react-hook-form'
+import type { SubmitHandler } from 'react-hook-form'
 
 import { Product } from '../../../models/product'
 import api from '../../../services/api'
+import { CreditCard } from '../../../models/credit-card'
 
 interface PageProps {
   product: Product
 }
 
 const ProductOrderPage: NextPage<PageProps> = ({ product }) => {
+  const { register, handleSubmit, setValue } = useForm<CreditCard>()
+
+  const handleFormSubmit: SubmitHandler<CreditCard> = async (values) => {
+    const { data } = await api.post('/orders', {
+      creditCard: values,
+      items: [
+        {
+          productId: product.id,
+          quantity: 1,
+        },
+      ],
+    })
+
+    console.log({ data })
+  }
+
+  const setAsInteger =
+    (field: keyof CreditCard) => (e: ChangeEvent<HTMLInputElement>) => {
+      setValue(field, parseInt(e.target.value))
+    }
+
   return (
-    <Container>
+    <>
       <Head>
         <title>Checkout - App Store</title>
       </Head>
@@ -43,13 +68,21 @@ const ProductOrderPage: NextPage<PageProps> = ({ product }) => {
         Pay with credit card
       </Typography>
 
-      <form>
+      <form onSubmit={handleSubmit(handleFormSubmit)}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <TextField label="Name" required fullWidth />
+            <TextField
+              {...register('name')}
+              variant="outlined"
+              label="Name"
+              required
+              fullWidth
+            />
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
+              {...register('number')}
+              variant="outlined"
               label="Card Number"
               inputProps={{ maxLength: 16 }}
               fullWidth
@@ -58,6 +91,8 @@ const ProductOrderPage: NextPage<PageProps> = ({ product }) => {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
+              {...register('cvv')}
+              variant="outlined"
               type="number"
               label="Verification number"
               required
@@ -68,25 +103,36 @@ const ProductOrderPage: NextPage<PageProps> = ({ product }) => {
             <Grid container spacing={3}>
               <Grid item xs={6}>
                 <TextField
+                  {...register('expirationMonth')}
+                  variant="outlined"
                   type="number"
                   label="Exp. Month"
+                  onChange={setAsInteger('expirationMonth')}
                   required
                   fullWidth
                 />
               </Grid>
               <Grid item xs={6}>
-                <TextField type="number" label="Exp. Year" required fullWidth />
+                <TextField
+                  {...register('expirationYear')}
+                  variant="outlined"
+                  type="number"
+                  label="Exp. Year"
+                  onChange={setAsInteger('expirationYear')}
+                  required
+                  fullWidth
+                />
               </Grid>
             </Grid>
           </Grid>
         </Grid>
-        <Box style={{ marginTop: '1rem' }}>
+        <Box marginTop={3}>
           <Button type="submit" variant="contained" color="primary" fullWidth>
             Finish
           </Button>
         </Box>
       </form>
-    </Container>
+    </>
   )
 }
 
@@ -96,9 +142,7 @@ export const getServerSideProps: GetServerSideProps<
 > = async ({ params }) => {
   try {
     const { slug } = params
-    const {
-      data: { product },
-    } = await api.get<{ product: Product }>(`/products/${slug}`)
+    const { data: product } = await api.get<Product>(`/products/${slug}`)
 
     return {
       props: {
@@ -113,18 +157,5 @@ export const getServerSideProps: GetServerSideProps<
     throw err
   }
 }
-
-// export const getStaticPaths: GetStaticPaths = async () => {
-//   const paths = [
-//     { slug: 'practical-concrete-chair' },
-//     { slug: 'practical-granite-table' },
-//     { slug: 'intelligent-metal-soap' },
-//   ].map((product) => ({ params: { slug: product.slug } }))
-
-//   return {
-//     paths,
-//     fallback: 'blocking',
-//   }
-// }
 
 export default ProductOrderPage
